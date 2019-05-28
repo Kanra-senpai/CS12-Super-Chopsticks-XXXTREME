@@ -1,0 +1,167 @@
+bool Player::attack2(socketstream sockets[], int player_ID){
+	while(true){
+		sockets[player_ID] << 0 << endl;
+		sockets[player_ID] << "------------------------------------------------------------------------------" << endl;
+		sockets[player_ID] << 0 << endl;
+		sockets[player_ID] << "Attack. Please select a target by typing their player number." << endl;
+		//
+		for(int i = 0; i < master_list.size(); i++){
+			if (master_list.at(i).team_id != team_id && !master_list.at(i).is_spectator){
+				sockets[player_ID] << 0 << endl;
+				sockets[player_ID] << i + 1 << ". " << master_list.at(i).username << " (Team " << master_list.at(i).team_id + 1 << ")" << endl;
+			}
+		}
+		sockets[player_ID] << 0 << endl;
+		sockets[player_ID] << "------------------------------------------------------------------------------" << endl;
+		sockets[player_ID] << 0 << endl;
+		sockets[player_ID] << "Enter target : " << endl;
+		int targetnumber;
+		//
+		while(true){
+			sockets[player_ID] << 3;
+			sockets[player_ID] >> targetnumber;
+			sockets[player_ID].ignore();
+			
+			if (sockets[player_ID].fail()){
+				sockets[player_ID] << 0 << endl;
+				sockets[player_ID] << "[Error] Invalid input. Did you input the username instead of the Player ID?" << endl;
+				continue;
+			}
+			if (targetnumber <= 0 || targetnumber > master_list.size()){
+				sockets[player_ID] << 0 << endl;
+				sockets[player_ID] << "[Error] No such player exists." << endl;
+				continue;
+			}
+			if (master_list.at(targetnumber-1).player_id == player_id){
+				sockets[player_ID] << 0 << endl;
+				sockets[player_ID] << "[Error] You wish to attack yourself? Please select a different player." << endl;
+				continue;
+			}
+			if (master_list.at(targetnumber-1).team_id == team_id){
+				sockets[player_ID] << 0 << endl;
+				sockets[player_ID] << "[Error] This player is your friend. Please select a different player." << endl;
+				continue;
+			}
+			if (master_list.at(targetnumber-1).is_spectator){
+				sockets[player_ID] << 0 << endl;
+				sockets[player_ID] << "[Error] This player is dead. Please select a different player." << endl;
+				continue;
+			}
+			break;
+		}
+		
+		Player* target = &(master_list.at(targetnumber-1));
+		sockets[player_ID] << 0 << endl;
+		sockets[player_ID] << "------------------------------------------------------------------------------"  << endl;
+		sockets[player_ID] << 0 << endl;
+		sockets[player_ID] << target->username << "'s extremities. Select one by typing the name and number (e.g. hand 2) Use lowercase only."<< endl;
+		vector<int> validhands;
+		vector<int> validfeet;
+		for(int i = 0; i < target->hands.size(); i++){
+			if (!target->hands.at(i).is_dead){
+				sockets[player_ID] << 0 << endl;
+				sockets[player_ID] << "hand " << i+1 << " :" << target->hands.at(i).fingers << "/" << target->hands.at(i).max_fingers << " fingers." << endl;
+				validhands.push_back(i);
+			}
+		}
+		for(int i = 0; i < target->feet.size(); i++){
+			if (!target->feet.at(i).is_dead){
+				sockets[player_ID] << 0 << endl;
+				sockets[player_ID] << "foot " << i+1 << " :" << target->feet.at(i).fingers << "/" << target->feet.at(i).max_fingers << " toes." << endl;
+				validfeet.push_back(i);
+			}
+		}
+		sockets[player_ID] << 0 << endl;
+		sockets[player_ID] << "------------------------------------------------------------------------------"  << endl;
+		sockets[player_ID] << 0 << endl;
+		sockets[player_ID] << "Enter target : ";
+		string targetpart;
+		int targetno;
+		Limb* targetlimb;
+		while(true){
+			sockets[player_ID] << 3;
+			sockets[player_ID] >> targetpart;
+			sockets[player_ID].ignore();
+			sockets[player_ID] << 3;
+			sockets[player_ID] >> targetno;
+			sockets[player_ID].ignore();
+			if (targetpart == "hand"){
+				if (find(validhands.begin(),validhands.end(),targetno-1) != validhands.end()){
+					targetlimb = &(target->hands.at(targetno-1));
+					break;
+				}
+			}
+			if (targetpart == "foot"){
+				if (find(validfeet.begin(),validfeet.end(),targetno-1) != validfeet.end()){
+					targetlimb = &(target->feet.at(targetno-1));
+					break;
+				}
+			}
+			else{
+				sockets[player_ID] << 0 << endl;
+				sockets[player_ID] << "[Error] Invalid input." << endl;
+				continue;
+			}			
+		}
+		sockets[player_ID] << 0 << endl;
+		sockets[player_ID] << "------------------------------------------------------------------------------"  << endl;
+		sockets[player_ID] << 0 << endl;
+		sockets[player_ID] << "Your extremities. Choose one to attack with using the same format (e.g. hand 1)" << endl;
+		vector<int> myvalidhands;
+		vector<int> myvalidfeet;
+		for(int i = 0; i < hands.size(); i++){
+			if (!hands.at(i).is_dead){
+				sockets[player_ID] << 0 << endl;
+				sockets[player_ID] << "hand " << i+1 << ": " << hands.at(i).fingers << "/" << hands.at(i).max_fingers << " fingers." << endl;
+				myvalidhands.push_back(i);
+			}
+		}
+		for(int i = 0; i < feet.size(); i++){
+			if (!feet.at(i).is_dead){
+				sockets[player_ID] << 0 << endl;
+				sockets[player_ID] << "foot " << i+1 << " : " << feet.at(i).fingers << "/" << feet.at(i).max_fingers << " toes." << endl;
+				myvalidfeet.push_back(i);
+			}
+		}
+		sockets[player_ID] << 0 << endl;
+		sockets[player_ID] << "#------------------------------------------------------------------------------"  << endl;
+		sockets[player_ID] << 0 << endl;
+		sockets[player_ID] << "Enter weapon : ";
+		string mypart;
+		int myno;
+		Limb* attacklimb;
+		while(true){
+			sockets[player_ID] << 3;
+			sockets[player_ID] >> mypart;
+			sockets[player_ID].ignore();
+			sockets[player_ID] << 3;
+			sockets[player_ID] >> myno;
+			sockets[player_ID].ignore();
+			if (mypart == "hand"){
+				if (find(myvalidhands.begin(),myvalidhands.end(),myno-1) != myvalidhands.end()){
+					attacklimb = &(hands.at(myno-1));
+					break;
+				}
+			}
+			if (mypart == "foot"){
+				if (find(myvalidfeet.begin(),myvalidfeet.end(),myno-1) != myvalidfeet.end()){
+					attacklimb = &(feet.at(myno-1));
+					break;
+				}
+			}
+			sockets[player_ID] << 0 << endl;
+			sockets[player_ID] << "[Error] Invalid input." << endl;
+		}
+		sockets[player_ID] << 0 << endl;
+		sockets[player_ID] << "[Server] Attack is registered." << endl;
+		bool oof = targetlimb->add_fingers(attacklimb->fingers);
+		if (oof){
+			if (targetlimb->is_foot && !target->steeltoes) target->skipped = 1;
+			target->damage++;
+			target->checkhealth();
+		}
+		if (target->goodboi && !goodboi) skipped = 1;
+		return true;
+	}
+	return false;
+}
